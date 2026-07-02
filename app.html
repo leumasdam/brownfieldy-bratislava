@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Brownfieldy Bratislava — interaktívna mapa</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+@font-face{font-family:"Overused Grotesk";src:url("./fonts/OverusedGrotesk-VF.woff2") format("woff2");font-weight:300 900;font-display:swap}
+:root{
+  --green:#3fd35a;--amber:#f4a93a;--blue:#4ec5f9;--violet:#9b7fe6;--grey:#9a97b3;--warm:#e4564f;--revit:#3ee06a;
+  --nav:#0a0d24;--panel:rgba(16,20,48,.82);--panel2:rgba(22,27,60,.92);--line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.18);
+  --tx:#eef0ff;--dim:#a9adda;--faint:#6f74a6;--r:16px;--sh:0 24px 60px -18px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--nav);font-family:"Overused Grotesk","Inter",system-ui,sans-serif;color:var(--tx);-webkit-font-smoothing:antialiased}
+#map{position:absolute;inset:0}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-logo,.maplibregl-ctrl-bottom-right{display:none!important}
+canvas{outline:none}
+
+/* top nav */
+.nav{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:22px 34px;background:linear-gradient(180deg,rgba(10,13,36,.9),transparent);pointer-events:none}
+.logo{display:flex;align-items:center;gap:14px;pointer-events:auto}
+.logo svg{width:40px;height:40px;stroke:#fff;fill:none;stroke-width:2}
+.logo b{font-size:16px;font-weight:700;letter-spacing:1px;line-height:1.05;display:block}
+.menu{display:flex;gap:36px;pointer-events:auto}
+.menu a{font-size:14px;letter-spacing:1.5px;font-weight:600;color:var(--dim);cursor:pointer;position:relative;padding:6px 0;transition:.15s}
+.menu a:hover{color:var(--tx)}
+.menu a.on{color:#fff}
+.menu a.on::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--amber);border-radius:2px}
+.burger{pointer-events:auto;color:var(--dim);cursor:pointer;font-size:22px}
+
+/* right panels */
+.side{position:absolute;top:104px;right:26px;width:320px;z-index:9;display:flex;flex-direction:column;gap:16px}
+.pcard{background:linear-gradient(180deg,rgba(40,46,96,.4),rgba(16,20,48,.2)),var(--panel);backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:22px}
+.pcard h3{font-size:19px;font-weight:660;letter-spacing:-.3px}
+.pcard .cap{font-size:12px;color:var(--dim);margin-top:2px}
+.donutwrap{display:flex;align-items:center;gap:18px;margin-top:16px}
+.donut{position:relative;width:118px;height:118px;flex:none}
+.donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut .ctr b{font-size:30px;font-weight:700;line-height:1}
+.donut .ctr span{font-size:11px;color:var(--dim)}
+.dleg{display:flex;flex-direction:column;gap:9px;font-size:12.5px;color:var(--dim)}
+.dleg .d{display:flex;align-items:center;gap:8px}
+.dleg .d i{width:9px;height:9px;border-radius:50%;flex:none}
+.dleg .d b{color:var(--tx);font-variant-numeric:tabular-nums}
+.sel .lbl{font-size:12px;color:var(--dim)}
+.sel h2{font-size:24px;font-weight:660;letter-spacing:-.4px;margin:6px 0 2px}
+.sel .mc{font-size:13px;color:var(--dim)}
+.sel .btn{margin-top:16px;width:100%;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.06);border:1px solid var(--line2);color:var(--tx);font-family:inherit;font-size:13.5px;font-weight:600;padding:14px 16px;border-radius:12px;cursor:pointer;transition:.15s}
+.sel .btn:hover{background:rgba(255,255,255,.12)}
+.sel.empty h2{color:var(--faint)}
+.sel.empty .btn{opacity:.4;pointer-events:none}
+
+/* bottom toolbar */
+.toolbar{position:absolute;bottom:26px;left:0;right:0;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:0 34px;pointer-events:none}
+.tbtn{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--panel);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:14px;padding:14px 20px;color:var(--tx);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.tbtn:hover{background:var(--panel2)}
+.tbtn.on{border-color:var(--amber);color:var(--amber)}
+.tbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tools-mid{display:flex;gap:12px;pointer-events:auto}
+.ticon{width:52px;height:52px;justify-content:center;padding:0;border-radius:14px}
+
+/* timeline (vizia) */
+.timeline{position:absolute;bottom:100px;left:34px;right:34px;z-index:9;background:var(--panel);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:14px;padding:16px 24px;display:none}
+.timeline.on{display:block}
+.tl-row{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;margin-bottom:8px}
+.tl-row .cur{color:var(--amber);font-weight:700}
+.timeline input{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--amber) 0%,rgba(255,255,255,.15) 0%)}
+.timeline input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--amber);border:3px solid #fff;box-shadow:0 0 16px rgba(244,169,58,.6);cursor:pointer}
+
+/* detail overlay */
+.detail{position:absolute;top:104px;right:26px;width:360px;max-height:calc(100% - 150px);overflow-y:auto;z-index:12;background:linear-gradient(180deg,rgba(40,46,96,.45),rgba(16,20,48,.25)),var(--panel2);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:24px;transform:translateX(30px);opacity:0;pointer-events:none;transition:.35s}
+.detail.show{transform:none;opacity:1;pointer-events:auto}
+.detail .x{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--dim);cursor:pointer;font-size:17px}
+.detail .x:hover{color:#fff}
+.detail .chip{font-size:11px;font-weight:640;padding:4px 11px;border-radius:999px}
+.crit{background:rgba(228,86,79,.2);color:#ff9a94}.key{background:rgba(63,211,90,.2);color:#8ff0a0}
+.detail h2{font-size:23px;font-weight:660;letter-spacing:-.4px;margin:10px 0 3px}
+.detail .mc{font-size:12.5px;color:var(--dim);margin-bottom:14px}
+.photo{height:130px;border-radius:12px;margin:6px 0 14px;background:linear-gradient(135deg,#2a2f5e,#3d4585);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:12px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv .k{color:var(--dim)}.kv .v{font-weight:620;text-align:right}
+.sb{margin-top:13px}.sb .l{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--faint);font-weight:700}
+.sb p{font-size:12.5px;color:var(--dim);line-height:1.5;margin-top:5px}
+
+/* popover */
+.pop{position:absolute;z-index:14;background:var(--panel2);backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);padding:18px 20px;width:270px;display:none}
+.pop.on{display:block}
+.pop h4{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);font-weight:700;margin-bottom:12px}
+.pop .row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim);padding:7px 0;cursor:pointer}
+.pop .row i{width:12px;height:12px;border-radius:3px;flex:none}
+.pop .row b{margin-left:auto;color:var(--tx);font-variant-numeric:tabular-nums}
+#pop-legend{left:34px;bottom:96px}#pop-filter{right:34px;bottom:96px}
+
+.loader{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:var(--nav);color:var(--faint);font-size:13px;transition:.5s}
+.loader.hide{opacity:0;pointer-events:none}
+@media(max-width:820px){.side{position:static;width:auto;margin:80px 16px 0}.menu{display:none}.toolbar{padding:0 16px}.tbtn span{display:none}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<nav class="nav">
+  <div class="logo">
+    <svg viewBox="0 0 40 40"><path d="M6 34V16l4-3 4 3v-4l6-4 6 4v4l4-3 4 3v18z"/><path d="M6 34h28M14 34v-8h4v8M22 34v-8h4v8"/></svg>
+    <div><b>BROWNFIELDY<br>BRATISLAVA</b></div>
+  </div>
+  <div class="menu" id="menu">
+    <a data-mode="pulz" class="on">PULZ</a>
+    <a data-mode="objav">OBJAV</a>
+    <a data-mode="vizia">VÍZIA</a>
+    <a data-mode="info">O PROJEKTE</a>
+  </div>
+  <div class="burger">☰</div>
+</nav>
+
+<div class="side" id="side">
+  <div class="pcard" id="pulzcard">
+    <h3 id="pulz-title">Pulz mesta</h3>
+    <div class="cap" id="pulz-cap">Kto drží kľúč — 113 území</div>
+    <div class="donutwrap">
+      <div class="donut"><svg viewBox="0 0 42 42" id="donut" style="width:100%;height:100%;transform:rotate(-90deg)"></svg><div class="ctr"><b id="donut-n">113</b><span id="donut-l">území</span></div></div>
+      <div class="dleg" id="dleg"></div>
+    </div>
+  </div>
+  <div class="pcard sel empty" id="selcard">
+    <div class="lbl">Vybrané územie</div>
+    <h2 id="sel-name">— ťukni na mapu</h2>
+    <div class="mc" id="sel-mc"></div>
+    <button class="btn" id="sel-btn">Zobraziť detail <span>›</span></button>
+  </div>
+</div>
+
+<div class="timeline" id="timeline">
+  <div class="tl-row"><span>2025</span><span>2035</span><span class="cur" id="tl-year">2040</span><span>2050</span></div>
+  <input type="range" id="tl" min="0" max="100" value="0">
+</div>
+
+<div class="toolbar">
+  <button class="tbtn" id="btn-filter"><svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg><span>Filtrovať</span></button>
+  <div class="tools-mid">
+    <button class="tbtn ticon" id="btn-layers" title="Vrstvy"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+    <button class="tbtn ticon" id="btn-grid" title="2D / 3D"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></button>
+    <button class="tbtn ticon" id="btn-search" title="Hľadať"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></button>
+    <button class="tbtn ticon" id="btn-info" title="Info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+  </div>
+  <button class="tbtn" id="btn-legend"><span>Legenda</span><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+</div>
+
+<div class="pop" id="pop-legend"><h4>Kto drží kľúč — vlastníctvo</h4>
+  <div class="row"><i style="background:var(--amber)"></i>Súkromní vlastníci<b>56</b></div>
+  <div class="row"><i style="background:var(--grey)"></i>Iné<b>25</b></div>
+  <div class="row"><i style="background:var(--green)"></i>Mesto<b>13</b></div>
+  <div class="row"><i style="background:var(--violet)"></i>Štát<b>11</b></div>
+  <div class="row"><i style="background:var(--blue)"></i>Mesto + súkromní<b>8</b></div>
+  <div class="row"><i style="background:repeating-linear-gradient(45deg,var(--warm) 0 2px,transparent 2px 4px)"></i>Kontaminované<b>15</b></div>
+</div>
+<div class="pop" id="pop-filter"><h4>Filtrovať</h4>
+  <div class="row" data-f="all"><i style="background:var(--amber)"></i>Všetky územia<b>113</b></div>
+  <div class="row" data-f="MESTO"><i style="background:var(--green)"></i>Iba mestské<b>13</b></div>
+  <div class="row" data-f="SÚKROMNÍ VLASTNÍCI"><i style="background:var(--amber)"></i>Iba súkromné<b>56</b></div>
+  <div class="row" data-f="contam"><i style="background:var(--warm)"></i>Iba kontaminované<b>15</b></div>
+  <div class="row" data-f="big"><i style="background:var(--blue)"></i>Nad 25 ha<b>9</b></div>
+</div>
+
+<div class="detail" id="detail">
+  <button class="x" id="det-x">×</button>
+  <span class="chip" id="det-tag"></span>
+  <h2 id="det-name">—</h2>
+  <div class="mc" id="det-mc"></div>
+  <div class="photo">📷 historická + súčasná fotografia</div>
+  <div class="kv"><span class="k">Rozloha</span><span class="v" id="det-area">—</span></div>
+  <div class="kv"><span class="k">Kto drží kľúč</span><span class="v" id="det-owner">—</span></div>
+  <div class="kv"><span class="k">Env. záťaž</span><span class="v" id="det-contam">—</span></div>
+  <div class="sb"><div class="l">Súčasný stav</div><p id="det-use">—</p></div>
+  <div class="sb"><div class="l">Potenciál</div><p id="det-pot">—</p></div>
+</div>
+
+<div class="loader" id="loader">Skladám model mesta a 113 brownfieldov…</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>
+<script>
+const C={green:'#3fd35a',amber:'#f4a93a',blue:'#4ec5f9',violet:'#9b7fe6',grey:'#9a97b3',revit:'#3ee06a'};
+const ownerColor=['match',['get','DRUH_VLA'],'MESTO',C.green,'SÚKROMNÍ VLASTNÍCI',C.amber,'MESTO A SÚKROMNÍ VLASTNÍCI',C.blue,'ŠTÁT',C.violet,C.grey];
+const OWNER_LBL={'MESTO':'Mesto','SÚKROMNÍ VLASTNÍCI':'Súkromní vlastníci','MESTO A SÚKROMNÍ VLASTNÍCI':'Mesto + súkromní','ŠTÁT':'Štát','INÉ':'Iné'};
+const EASE={'MESTO':.15,'MESTO A SÚKROMNÍ VLASTNÍCI':.38,'ŠTÁT':.55,'SÚKROMNÍ VLASTNÍCI':.7,'INÉ':.82};
+const HEIGHT=['interpolate',['linear'],['get','VYMERA_HA'],0.5,10,10,28,140,70];
+
+if(window.pmtiles){try{maplibregl.addProtocol('pmtiles',new pmtiles.Protocol().tile);}catch(e){}}
+const PM=location.href.replace(/[^/]*(\?.*)?$/,'')+'data/buildings.pmtiles';
+const map=new maplibregl.Map({container:'map',style:{version:8,glyphs:'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',sources:{},layers:[{id:'bg',type:'background',paint:{'background-color':'#0a0d24'}}]},
+  center:[17.118,48.145],zoom:12.9,pitch:56,bearing:-19,maxPitch:72,antialias:true,attributionControl:false});
+
+let bf=null,mode='pulz',selId=null,filter='all',pulseRAF=null;
+
+function bbox(g){let x1=180,y1=90,x2=-180,y2=-90;const r=g.type==='Polygon'?g.coordinates:g.coordinates.flat();r.forEach(rr=>rr.forEach(([x,y])=>{x1=Math.min(x1,x);y1=Math.min(y1,y);x2=Math.max(x2,x);y2=Math.max(y2,y);}));return[[x1,y1],[x2,y2]];}
+
+map.on('load',async()=>{
+  try{map.addSource('bld',{type:'vector',url:'pmtiles://'+PM});
+    map.addLayer({id:'city',type:'fill-extrusion',source:'bld','source-layer':'building',minzoom:10,
+      paint:{'fill-extrusion-color':['interpolate',['linear'],['get','h'],0,'#232a55',40,'#313c74',100,'#3f4d8f'],'fill-extrusion-height':['get','h'],'fill-extrusion-base':['coalesce',['get','min'],0],'fill-extrusion-opacity':.95,'fill-extrusion-vertical-gradient':true}});
+  }catch(e){console.warn(e);}
+  bf=await(await fetch('data/bf_real.geojson')).json();
+  bf.features.forEach(f=>{const o=f.properties.DRUH_VLA;f.properties._vt=Math.min(.98,(EASE[o]!=null?EASE[o]:.82)+Math.min(.15,(f.properties.VYMERA_HA||0)/220));});
+  map.addSource('bf',{type:'geojson',data:bf,promoteId:'OBJECTID'});
+  const s=14,cv=document.createElement('canvas');cv.width=cv.height=s;const cx=cv.getContext('2d');
+  cx.fillStyle='rgba(228,86,79,.95)';[[4,4],[10,10]].forEach(([a,b])=>{cx.beginPath();cx.arc(a,b,1.7,0,7);cx.fill();});
+  map.addImage('dots',cx.getImageData(0,0,s,s));
+  map.addLayer({id:'bf-vol',type:'fill-extrusion',source:'bf',paint:{'fill-extrusion-color':ownerColor,'fill-extrusion-height':HEIGHT,'fill-extrusion-base':0,'fill-extrusion-opacity':.75,'fill-extrusion-vertical-gradient':true}});
+  map.addLayer({id:'bf-line',type:'line',source:'bf',paint:{'line-color':ownerColor,'line-width':1.1,'line-opacity':.55}});
+  map.addLayer({id:'bf-contam',type:'fill',source:'bf',filter:['==',['get','KONTAMIN'],'2'],layout:{visibility:'none'},paint:{'fill-pattern':'dots','fill-opacity':.9}});
+  map.on('click','bf-vol',e=>select(e.features[0].id));
+  map.on('mouseenter','bf-vol',()=>map.getCanvas().style.cursor='pointer');
+  map.on('mouseleave','bf-vol',()=>map.getCanvas().style.cursor='');
+  document.getElementById('loader').classList.add('hide');
+  renderDonut();pulse();
+  const q=new URLSearchParams(location.search);if(q.get('mode'))setMode(q.get('mode'));
+});
+
+/* donut */
+function seg(dash,off,col){return '<circle cx="21" cy="21" r="15.9" fill="none" stroke="'+col+'" stroke-width="4.2" stroke-dasharray="'+dash+' '+(100-dash)+'" stroke-dashoffset="'+off+'"/>';}
+function renderDonut(){
+  let data,total,center,cl;
+  if(mode==='vizia'){const s=+document.getElementById('tl').value/100;let a=0,ha=0;bf.features.forEach(f=>{if(f.properties._vt<=s){a++;ha+=f.properties.VYMERA_HA||0;}});
+    const rest=113-a;data=[[Math.round(a/113*100),C.revit],[Math.round(rest/113*100),C.grey]];center=a;cl='oživených';
+    document.getElementById('pulz-title').textContent='Vízia — premena';document.getElementById('pulz-cap').textContent=Math.round(ha)+' ha vrátených mestu';
+    document.getElementById('dleg').innerHTML='<div class="d"><i style="background:'+C.revit+'"></i>Oživené <b>'+a+'</b></div><div class="d"><i style="background:'+C.grey+'"></i>Čaká <b>'+rest+'</b></div>';
+  } else {
+    const suk=56,ver=24,ine=33;data=[[Math.round(suk/113*100),C.amber],[Math.round(ver/113*100),C.green],[Math.round(ine/113*100),C.grey]];center=113;cl='území';
+    document.getElementById('pulz-title').textContent='Pulz mesta';document.getElementById('pulz-cap').textContent='Kto drží kľúč — 113 území';
+    document.getElementById('dleg').innerHTML='<div class="d"><i style="background:'+C.amber+'"></i>Súkromní <b>56</b></div><div class="d"><i style="background:'+C.green+'"></i>Verejné (mesto/štát) <b>24</b></div><div class="d"><i style="background:'+C.grey+'"></i>Iné / zmiešané <b>33</b></div>';
+  }
+  let off=25,svg='';data.forEach(([v,c])=>{svg+=seg(v,off,c);off-=v;});
+  document.getElementById('donut').innerHTML=svg;
+  document.getElementById('donut-n').textContent=center;document.getElementById('donut-l').textContent=cl;
+}
+
+/* pulse */
+function stopPulse(){if(pulseRAF)cancelAnimationFrame(pulseRAF);pulseRAF=null;}
+function pulse(){const t=performance.now()/1000;if(map.getLayer('bf-vol'))map.setPaintProperty('bf-vol','fill-extrusion-opacity',.6+.18*(0.5+0.5*Math.sin(t*1.3)));pulseRAF=requestAnimationFrame(pulse);}
+
+/* modes */
+function setMode(m){
+  if(m==='info'){alert('Brownfieldy Bratislava — interaktívny model pre TU-BA. Dáta: UŠ Brownfieldy 2022 (MIB). 113 území, 580 ha.');return;}
+  mode=m;
+  document.querySelectorAll('#menu a').forEach(a=>a.classList.toggle('on',a.dataset.mode===m));
+  document.getElementById('timeline').classList.toggle('on',m==='vizia');
+  closeDetail();stopPulse();
+  map.setPaintProperty('bf-vol','fill-extrusion-color',ownerColor);
+  map.setPaintProperty('bf-line','line-color',ownerColor);
+  map.setPaintProperty('bf-vol','fill-extrusion-height',HEIGHT);
+  if(m==='pulz'){pulse();}
+  if(m==='objav'){map.setPaintProperty('bf-vol','fill-extrusion-opacity',.8);}
+  if(m==='vizia'){document.getElementById('tl').value=0;applyVision(0);}
+  renderDonut();
+}
+
+/* select */
+function select(id){
+  selId=id;const f=bf.features.find(x=>x.properties.OBJECTID===id);if(!f)return;const p=f.properties;
+  if(mode==='pulz'){stopPulse();}
+  map.setPaintProperty('bf-vol','fill-extrusion-opacity',['case',['==',['id'],id],.92,.28]);
+  map.setPaintProperty('bf-line','line-opacity',['case',['==',['id'],id],1,.15]);
+  document.getElementById('selcard').classList.remove('empty');
+  document.getElementById('sel-name').textContent=p.NAZOV||'Brownfield';
+  document.getElementById('sel-mc').textContent=(OWNER_LBL[p.DRUH_VLA]||'Iné')+' · '+(p.MC||'');
+  map.flyTo({center:map.getSource('bf')&&bboxCenter(f.geometry),zoom:14,pitch:58,duration:900});
+  if(mode==='objav')openDetail(p);
+}
+function bboxCenter(g){const b=bbox(g);return [(b[0][0]+b[1][0])/2,(b[0][1]+b[1][1])/2];}
+document.getElementById('sel-btn').onclick=()=>{const f=bf.features.find(x=>x.properties.OBJECTID===selId);if(f)openDetail(f.properties);};
+
+function openDetail(p){
+  const oc={'MESTO':C.green,'SÚKROMNÍ VLASTNÍCI':C.amber,'MESTO A SÚKROMNÍ VLASTNÍCI':C.blue,'ŠTÁT':C.violet}[p.DRUH_VLA]||C.grey;
+  const t=document.getElementById('det-tag');t.textContent=OWNER_LBL[p.DRUH_VLA]||'Iné';t.style.background='rgba(255,255,255,.08)';t.style.color=oc;
+  document.getElementById('det-name').textContent=p.NAZOV||'Brownfield';
+  document.getElementById('det-mc').textContent=(p.MC||'')+(p.ADRESA?' · '+p.ADRESA:'');
+  document.getElementById('det-area').textContent='~'+(Math.round((p.VYMERA_HA||0)*10)/10)+' ha';
+  document.getElementById('det-owner').innerHTML=p.DRUH_VLA==='MESTO'?'<span class="chip key">Mesto drží kľúč</span>':(OWNER_LBL[p.DRUH_VLA]||'Iné');
+  document.getElementById('det-contam').innerHTML=p.KONTAMIN==='2'?'<span class="chip crit">prítomná</span>':'nezistená';
+  document.getElementById('det-use').textContent=p.S_VYUZITIE||p.N_FUNK_POP||'—';
+  document.getElementById('det-pot').textContent=p.POTENCIAL||p.ZAMER||p.DOP_B_VYUZ||'—';
+  document.getElementById('detail').classList.add('show');
+  document.getElementById('side').style.opacity=.15;
+}
+function closeDetail(){document.getElementById('detail').classList.remove('show');document.getElementById('side').style.opacity=1;}
+document.getElementById('det-x').onclick=closeDetail;
+
+/* vizia */
+function applyVision(v){const s=v/100;
+  const col=['case',['<=',['get','_vt'],s],C.revit,ownerColor];
+  map.setPaintProperty('bf-vol','fill-extrusion-color',col);map.setPaintProperty('bf-line','line-color',col);
+  map.setPaintProperty('bf-vol','fill-extrusion-height',['*',HEIGHT,['case',['<=',['get','_vt'],s],1.5,1]]);
+  document.getElementById('tl-year').textContent=Math.round(2025+s*25);
+  document.getElementById('tl').style.background='linear-gradient(90deg,var(--amber) '+v+'%,rgba(255,255,255,.15) '+v+'%)';
+  renderDonut();
+}
+document.getElementById('tl').oninput=e=>applyVision(+e.target.value);
+
+/* toolbar */
+document.querySelectorAll('#menu a').forEach(a=>a.onclick=()=>setMode(a.dataset.mode));
+function popTog(id,btn){const p=document.getElementById(id);const open=!p.classList.contains('on');document.querySelectorAll('.pop').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.tbtn').forEach(x=>x.classList.remove('on'));if(open){p.classList.add('on');btn&&btn.classList.add('on');}}
+document.getElementById('btn-legend').onclick=e=>popTog('pop-legend',e.currentTarget);
+document.getElementById('btn-filter').onclick=e=>popTog('pop-filter',e.currentTarget);
+document.getElementById('btn-info').onclick=()=>setMode('info');
+document.getElementById('btn-grid').onclick=()=>{const p=map.getPitch();map.easeTo({pitch:p>25?12:56,duration:700});};
+document.getElementById('btn-search').onclick=()=>popTog('pop-filter',document.getElementById('btn-filter'));
+document.getElementById('btn-layers').onclick=e=>{const on=map.getLayoutProperty('bf-contam','visibility')==='visible';map.setLayoutProperty('bf-contam','visibility',on?'none':'visible');e.currentTarget.classList.toggle('on',!on);};
+document.querySelectorAll('#pop-filter .row').forEach(r=>r.onclick=()=>{const f=r.dataset.f;
+  let filt=null;if(f==='contam')filt=['==',['get','KONTAMIN'],'2'];else if(f==='big')filt=['>=',['get','VYMERA_HA'],25];else if(f!=='all')filt=['==',['get','DRUH_VLA'],f];
+  ['bf-vol','bf-line'].forEach(l=>map.setFilter(l,filt));document.getElementById('pop-filter').classList.remove('on');document.getElementById('btn-filter').classList.remove('on');});
+
+/* poistky: prstenec hneď + loader nech nezostane visieť */
+try{renderDonut();}catch(e){}
+setTimeout(()=>document.getElementById('loader').classList.add('hide'),7000);
+map.on('error',e=>console.warn('map error',e&&e.error));
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Brownfieldy · interaktívny model — TU-BA</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+@font-face{font-family:"Overused Grotesk";src:url("./fonts/OverusedGrotesk-VF.woff2") format("woff2");font-weight:300 900;font-display:swap}
+:root{
+  --indigo:#30287B; --blue:#4ec5f9; --warm:#e4564f; --green:#29b826; --amber:#f4b860; --violet:#9b7fe6; --grey:#9a97b3;
+  --panel:rgba(23,20,38,.74); --panel-2:rgba(30,26,50,.9);
+  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.16);
+  --tx:#efe9fb; --tx-dim:#b7b1d4; --tx-faint:#847ea6;
+  --r:15px; --shadow:0 24px 60px -20px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;color:var(--tx);
+  font-family:"Overused Grotesk","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#map{position:absolute;inset:0}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-logo{display:none!important}
+.maplibregl-ctrl-group{background:var(--panel)!important;border:1px solid var(--line)!important}
+.maplibregl-ctrl-group button+button{border-top:1px solid var(--line)!important}
+.topbar{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;justify-content:space-between;align-items:flex-start;padding:18px 22px;pointer-events:none;background:linear-gradient(180deg,rgba(11,10,20,.9),transparent)}
+.brand{display:flex;gap:12px;align-items:center}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(244,184,96,.16),0 0 16px rgba(244,184,96,.7)}
+.brand b{font-size:16px;font-weight:680;letter-spacing:.2px;line-height:1.05;display:block}
+.brand em{font-style:normal;font-size:12px;color:var(--tx-dim)}
+.counter{pointer-events:auto;text-align:right;font-variant-numeric:tabular-nums;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 15px;backdrop-filter:blur(14px);opacity:0;transform:translateY(-6px);transition:.35s}
+.counter.show{opacity:1;transform:none}
+.counter b{font-size:20px;font-weight:680;color:var(--green)}
+.counter span{font-size:11.5px;color:var(--tx-dim);display:block;letter-spacing:.3px}
+.panel{position:absolute;top:78px;left:18px;bottom:18px;width:336px;z-index:7;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(46,40,74,.5),rgba(23,20,38,.2)),var(--panel);backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;transition:transform .5s}
+.panel::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(244,184,96,.5),transparent)}
+body.proj .panel,body.proj .topbar,body.proj .sitecard{transform:translateX(-380px);opacity:0;pointer-events:none}
+body.proj .counter{transform:translateX(380px);opacity:0}
+.pscroll{overflow-y:auto;padding:20px;flex:1;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.pscroll::-webkit-scrollbar{width:5px}.pscroll::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
+.lede h1{font-size:20px;font-weight:640;letter-spacing:-.4px;line-height:1.14;margin:0 0 8px}
+.lede p{font-size:12.5px;line-height:1.55;color:var(--tx-dim);margin:0}
+.lede p b{color:var(--tx)}
+.block{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.block:first-child{margin-top:14px;padding-top:0;border-top:0}
+.eyebrow{font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--tx-faint);font-weight:680;margin:0 0 11px}
+.seg{display:flex;gap:4px;background:rgba(0,0,0,.28);padding:4px;border-radius:11px}
+.seg button{flex:1;border:0;background:transparent;color:var(--tx-dim);font-size:13px;font-weight:560;padding:10px 0;border-radius:8px;cursor:pointer;font-family:inherit;transition:.16s;letter-spacing:.2px}
+.seg button:hover{color:var(--tx)}
+.seg button.active{background:var(--indigo);color:#fff;font-weight:660;box-shadow:0 4px 14px -4px rgba(48,40,123,.9)}
+.mode-desc{font-size:12px;line-height:1.5;color:var(--tx-dim);margin:12px 2px 0;min-height:34px}
+.tg{display:flex;align-items:center;gap:11px;padding:9px 6px;font-size:13px;color:var(--tx);cursor:pointer;border-radius:8px;transition:.15s}
+.tg:hover{background:rgba(255,255,255,.04)}
+.tg .sw-i{width:15px;height:15px;border-radius:4px;flex:none}
+.tg input{display:none}
+.tg .toggle{margin-left:auto;width:34px;height:19px;border-radius:999px;background:var(--indigo);position:relative;flex:none;transition:.2s}
+.tg .toggle::after{content:"";position:absolute;top:2px;left:17px;width:15px;height:15px;border-radius:50%;background:#fff;transition:.2s}
+.tg input:not(:checked)+.toggle{background:rgba(255,255,255,.14)}
+.tg input:not(:checked)+.toggle::after{left:2px;background:#b9b4c9}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:3px;background:rgba(255,255,255,.14);margin:10px 0 6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--amber);border:2px solid #fff;box-shadow:0 0 0 4px rgba(244,184,96,.25),0 0 16px rgba(244,184,96,.5);cursor:pointer}
+.ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums}
+.slider-wrap{opacity:.4;pointer-events:none;transition:.3s}
+.slider-wrap.on{opacity:1;pointer-events:auto}
+.legend{display:flex;flex-direction:column;gap:8px}
+.lg{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--tx-dim)}
+.lg i{width:12px;height:12px;border-radius:3px;flex:none;display:inline-block}
+.lg .dots{background:repeating-linear-gradient(45deg,var(--warm) 0 2px,transparent 2px 5px)}
+.lg b{color:var(--tx);font-variant-numeric:tabular-nums}
+.pnote{font-size:11.5px;line-height:1.55;color:var(--tx-faint);background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:10px;padding:12px 13px;margin-top:8px}
+.pnote b{color:var(--amber);font-weight:600}
+.btn{font-family:inherit;font-size:13px;font-weight:620;border-radius:10px;cursor:pointer;padding:12px;border:1px solid var(--line-2);background:rgba(255,255,255,.06);color:var(--tx);width:100%;transition:.15s;letter-spacing:.2px}
+.btn:hover{background:rgba(255,255,255,.12)}
+.foot{padding:12px 20px;border-top:1px solid var(--line);font-size:10px;color:var(--tx-faint);line-height:1.5}
+.sitecard{position:absolute;right:18px;top:78px;width:322px;max-height:calc(100% - 96px);overflow-y:auto;z-index:7;background:linear-gradient(180deg,rgba(46,40,74,.5),rgba(23,20,38,.25)),var(--panel-2);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px;transform:translateX(30px);opacity:0;pointer-events:none;transition:.4s cubic-bezier(.4,0,.1,1)}
+.sitecard.show{transform:none;opacity:1;pointer-events:auto}
+.sitecard .close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--tx-dim);cursor:pointer;font-size:16px;line-height:1}
+.sitecard .close:hover{color:var(--tx)}
+.sitecard .state-pill{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:620;padding:4px 11px;border-radius:999px;margin-bottom:11px}
+.sitecard h3{margin:0;font-size:20px;font-weight:660;letter-spacing:-.3px;line-height:1.15}
+.sitecard .sub{font-size:12.5px;color:var(--tx-dim);margin:3px 0 15px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv .k{color:var(--tx-dim);flex:none}.kv .v{font-weight:620;text-align:right}
+.pill{font-size:10.5px;font-weight:640;padding:3px 9px;border-radius:999px}
+.pill.crit{background:rgba(228,86,79,.18);color:#ff9a94}
+.pill.key{background:rgba(41,184,38,.18);color:#7de07a}
+.story-b{margin-top:14px}
+.story-b .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--tx-faint);font-weight:680}
+.story-b p{font-size:12.5px;line-height:1.5;color:var(--tx-dim);margin:5px 0 0}
+.intro{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 100% at 50% 30%,rgba(30,26,50,.6),rgba(9,8,16,.95));backdrop-filter:blur(3px);transition:.5s}
+.intro.hide{opacity:0;pointer-events:none}
+.intro-card{max-width:520px;text-align:center;padding:0 30px}
+.intro-kick{font-size:11.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--amber);font-weight:680;display:inline-flex;gap:9px;align-items:center}
+.intro-kick i{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.intro h1{font-size:clamp(30px,5vw,46px);font-weight:660;letter-spacing:-1px;line-height:1.05;margin:20px 0 14px}
+.intro h1 em{font-style:normal;color:var(--amber)}
+.intro p{font-size:15px;line-height:1.6;color:var(--tx-dim);margin:0 auto 26px;max-width:44ch}
+.intro .btn{width:auto;padding:13px 26px;background:var(--indigo);border-color:transparent;font-size:14px;box-shadow:0 10px 30px -8px rgba(48,40,123,.9)}
+.intro .btn:hover{filter:brightness(1.12)}
+.loader{position:absolute;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;background:#0b0a14;color:var(--tx-faint);font-size:13px;transition:.5s}
+.loader.hide{opacity:0;pointer-events:none}
+.hint-proj{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:8;font-size:12px;color:var(--tx-dim);background:var(--panel);border:1px solid var(--line);padding:8px 15px;border-radius:999px;opacity:0;transition:.3s}
+body.proj .hint-proj{opacity:1}
+@media(max-width:720px){.panel{width:calc(100% - 36px)}.sitecard{left:18px;right:18px;width:auto;top:auto;bottom:18px;max-height:52%}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span><div><b>Brownfieldy&nbsp;Bratislavy</b><em>113 území · 580 ha · reálne dáta MIB (UŠ 2022)</em></div></div>
+  <div class="counter" id="counter"><b id="cnt-n">0 / 113</b><span id="cnt-ha">oživených · 0 ha</span></div>
+</header>
+
+<aside class="panel" id="panel">
+  <div class="pscroll">
+    <div class="block lede">
+      <h1>Mesto stíchlo.<br>Brownfieldy svietia.</h1>
+      <p><b>113 brownfieldov · 580 ha</b> nevyužitého tkaniva. Zafarbené podľa toho, <b>kto drží kľúč</b> — kto musí povedať áno, aby sa územie pohlo.</p>
+    </div>
+    <div class="block">
+      <p class="eyebrow">Režim zážitku</p>
+      <div class="seg" id="modeseg">
+        <button data-mode="pulz" class="active">Pulz</button>
+        <button data-mode="objav">Objav</button>
+        <button data-mode="vizia">Vízia</button>
+      </div>
+      <p class="mode-desc" id="mode-desc"></p>
+    </div>
+    <div class="block slider-wrap" id="sliderwrap">
+      <p class="eyebrow">Časová os premeny (ilustračná)</p>
+      <input type="range" id="tl" min="0" max="100" value="0">
+      <div class="ticks"><span>Dnes</span><span>Priebežne</span><span>Vízia</span></div>
+    </div>
+    <div class="block">
+      <p class="eyebrow">Vrstvy</p>
+      <label class="tg"><span class="sw-i" style="background:var(--amber)"></span>Všetkých 113 brownfieldov<input type="checkbox" id="l-base" checked><span class="toggle"></span></label>
+      <label class="tg"><span class="sw-i" style="background:repeating-linear-gradient(45deg,var(--warm) 0 2px,transparent 2px 5px)"></span>Kontaminované (15)<input type="checkbox" id="l-contam"><span class="toggle"></span></label>
+      <label class="tg"><span class="sw-i" style="background:transparent;border:2px solid var(--blue)"></span>Veľké areály (nad 25 ha)<input type="checkbox" id="l-big"><span class="toggle"></span></label>
+      <label class="tg"><span class="sw-i" style="background:transparent;border:2px solid #fff"></span>Zvýrazniť mestské (13)<input type="checkbox" id="l-mesto"><span class="toggle"></span></label>
+    </div>
+    <div class="block">
+      <p class="eyebrow">Kto drží kľúč — vlastníctvo</p>
+      <div class="legend">
+        <div class="lg"><i style="background:var(--amber)"></i>Súkromní vlastníci <b>· 56</b></div>
+        <div class="lg"><i style="background:var(--grey)"></i>Iné <b>· 25</b></div>
+        <div class="lg"><i style="background:var(--green)"></i>Mesto <b>· 13</b></div>
+        <div class="lg"><i style="background:var(--violet)"></i>Štát <b>· 11</b></div>
+        <div class="lg"><i style="background:var(--blue)"></i>Mesto + súkromní <b>· 8</b></div>
+        <div class="lg"><i class="dots"></i>Kontaminované územie</div>
+      </div>
+      <div class="pnote">💡 Len <b>13 zo 113</b> je väčšinovo mestských — <b>56</b> súkromných. Preto to viazne: mesto väčšinu území <b>nevlastní</b> a musí sa dohodnúť.</div>
+    </div>
+    <div class="block"><button class="btn" id="proj-btn">🔦 Projekčný režim (skryť UI)</button></div>
+  </div>
+  <div class="foot">Reálne dáta: geoportal.bratislava.sk — UŠ Brownfieldy 2022 (MIB). Model budov: OpenStreetMap (ODbL) · MapLibre. Časová os je ilustračný scenár.</div>
+</aside>
+
+<div class="sitecard" id="sitecard">
+  <button class="close" id="sc-close">×</button>
+  <div class="state-pill" id="sc-state"></div>
+  <h3 id="sc-name">—</h3>
+  <div class="sub" id="sc-sub">—</div>
+  <div class="kv"><span class="k">Rozloha</span><span class="v" id="sc-area">—</span></div>
+  <div class="kv"><span class="k">Kto drží kľúč</span><span class="v" id="sc-owner">—</span></div>
+  <div class="kv"><span class="k">Env. záťaž</span><span class="v" id="sc-contam">—</span></div>
+  <div class="story-b"><div class="lbl">Súčasný stav</div><p id="sc-use">—</p></div>
+  <div class="story-b"><div class="lbl">Potenciál</div><p id="sc-potential">—</p></div>
+</div>
+
+<div class="hint-proj">Projekčný režim · <b>Esc</b> alebo <b>P</b> = späť</div>
+<div class="loader" id="loader">Skladám model mesta a 113 brownfieldov…</div>
+<div class="intro" id="intro">
+  <div class="intro-card">
+    <div class="intro-kick"><i></i> MIB · TU-BA · interaktívny model</div>
+    <h1>Od nevyužitých území<br>k <em>živým štvrtiam</em></h1>
+    <p>113 brownfieldov, 580 hektárov mŕtvej zeme. Farba ukazuje, kto drží kľúč. Klikni na územie a pozri jeho príbeh — alebo posuň čas a sleduj, ako by mesto ožilo.</p>
+    <button class="btn" id="intro-go">Rozsvietiť model →</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>
+<script>
+const C={green:'#29b826',amber:'#f4b860',blue:'#4ec5f9',violet:'#9b7fe6',grey:'#9a97b3',indigo:'#30287B',warm:'#e4564f',revit:'#3ee06a'};
+// farba podľa vlastníctva = „kto drží kľúč"
+const ownerColor=['match',['get','DRUH_VLA'],
+  'MESTO',C.green,'SÚKROMNÍ VLASTNÍCI',C.amber,'MESTO A SÚKROMNÍ VLASTNÍCI',C.blue,'ŠTÁT',C.violet, C.grey];
+const OWNER_LBL={'MESTO':'Mesto','SÚKROMNÍ VLASTNÍCI':'Súkromní vlastníci','MESTO A SÚKROMNÍ VLASTNÍCI':'Mesto + súkromní','ŠTÁT':'Štát','INÉ':'Iné'};
+// ilustračný prah aktivácie vo vízii: mestské sa pohnú prv, veľké/súkromné neskôr
+const EASE={'MESTO':.15,'MESTO A SÚKROMNÍ VLASTNÍCI':.38,'ŠTÁT':.55,'SÚKROMNÍ VLASTNÍCI':.7,'INÉ':.82};
+const HEIGHT=['interpolate',['linear'],['get','VYMERA_HA'],0.5,8,10,22,140,55];
+
+if(window.pmtiles){try{maplibregl.addProtocol('pmtiles',new pmtiles.Protocol().tile);}catch(e){}}
+const PM=location.href.replace(/[^/]*(\?.*)?$/,'')+'data/buildings.pmtiles';
+
+const map=new maplibregl.Map({container:'map',
+  style:{version:8,glyphs:'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',sources:{},layers:[{id:'bg',type:'background',paint:{'background-color':'#0b0a14'}}]},
+  center:[17.115,48.15],zoom:11.75,pitch:40,bearing:-13,maxPitch:70,antialias:true,attributionControl:false});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+
+let bf=null, mode='pulz', selId=null, pulseRAF=null;
+
+function bbox(g){let x1=180,y1=90,x2=-180,y2=-90;const rings=g.type==='Polygon'?g.coordinates:g.coordinates.flat();rings.forEach(r=>r.forEach(([x,y])=>{x1=Math.min(x1,x);y1=Math.min(y1,y);x2=Math.max(x2,x);y2=Math.max(y2,y);}));return[[x1,y1],[x2,y2]];}
+
+map.on('load',async()=>{
+  try{
+    map.addSource('bld',{type:'vector',url:'pmtiles://'+PM});
+    map.addLayer({id:'city',type:'fill-extrusion',source:'bld','source-layer':'building',minzoom:10,
+      paint:{'fill-extrusion-color':['interpolate',['linear'],['get','h'],0,'#4b4964',30,'#5d5b78',90,'#7d7ba0'],
+        'fill-extrusion-height':['get','h'],'fill-extrusion-base':['coalesce',['get','min'],0],'fill-extrusion-opacity':.92,'fill-extrusion-vertical-gradient':true}});
+  }catch(e){console.warn('pmtiles',e);}
+
+  bf=await(await fetch('data/bf_real.geojson')).json();
+  bf.features.forEach(f=>{const o=f.properties.DRUH_VLA;f.properties._vt=Math.min(.98,(EASE[o]!=null?EASE[o]:.82)+Math.min(.15,(f.properties.VYMERA_HA||0)/220));});
+  map.addSource('bf',{type:'geojson',data:bf,promoteId:'OBJECTID'});
+
+  const s=14,cv=document.createElement('canvas');cv.width=cv.height=s;const cx=cv.getContext('2d');
+  cx.fillStyle='rgba(228,86,79,.95)';[[4,4],[10,10]].forEach(([a,b])=>{cx.beginPath();cx.arc(a,b,1.7,0,7);cx.fill();});
+  map.addImage('dots',cx.getImageData(0,0,s,s));
+
+  map.addLayer({id:'bf-vol',type:'fill-extrusion',source:'bf',paint:{'fill-extrusion-color':ownerColor,'fill-extrusion-height':HEIGHT,'fill-extrusion-base':0,'fill-extrusion-opacity':.62,'fill-extrusion-vertical-gradient':true}});
+  map.addLayer({id:'bf-line',type:'line',source:'bf',paint:{'line-color':ownerColor,'line-width':1.1,'line-opacity':.8}});
+  map.addLayer({id:'bf-contam',type:'fill',source:'bf',filter:['==',['get','KONTAMIN'],'2'],layout:{visibility:'none'},paint:{'fill-pattern':'dots','fill-opacity':.9}});
+  map.addLayer({id:'bf-big',type:'line',source:'bf',filter:['>=',['get','VYMERA_HA'],25],layout:{visibility:'none'},paint:{'line-color':C.blue,'line-width':2.4,'line-dasharray':[2,1.5]}});
+  map.addLayer({id:'bf-mesto',type:'line',source:'bf',filter:['==',['get','DRUH_VLA'],'MESTO'],layout:{visibility:'none'},paint:{'line-color':'#fff','line-width':2.4,'line-opacity':.95}});
+
+  map.on('click','bf-vol',e=>{if(mode==='objav')select(e.features[0].id);});
+  map.on('mouseenter','bf-vol',()=>{if(mode==='objav')map.getCanvas().style.cursor='pointer';});
+  map.on('mouseleave','bf-vol',()=>map.getCanvas().style.cursor='');
+
+  document.getElementById('loader').classList.add('hide');
+  setMode('pulz');
+  const q=new URLSearchParams(location.search);
+  if(q.get('intro')==='0')document.getElementById('intro').classList.add('hide');
+  if(q.get('mode'))setMode(q.get('mode'));
+  if(q.get('t')!==null&&q.get('mode')==='vizia'){document.getElementById('tl').value=+q.get('t');applyVision(+q.get('t'));}
+  if(q.get('sel')){setMode('objav');setTimeout(()=>select(+q.get('sel')),60);}
+  if(q.get('proj')==='1')proj(true);
+});
+
+const DESC={
+  pulz:'Mesto stíchlo. 113 brownfieldov jemne pulzuje, zafarbených podľa vlastníka. Zeleň = mestské, jantár = súkromné.',
+  objav:'Klikni na ktorékoľvek územie. Model naň posvieti a na karte uvidíš reálne dáta: rozlohu, vlastníka, záťaž, súčasný stav a potenciál.',
+  vizia:'Potiahni časovú os. Územia postupne ožívajú (zelená) — mestské sa pohnú prv, veľké a súkromné neskôr. Ilustračný scenár.'
+};
+function stopPulse(){if(pulseRAF)cancelAnimationFrame(pulseRAF);pulseRAF=null;}
+function pulse(){const t=performance.now()/1000;if(map.getLayer('bf-vol'))map.setPaintProperty('bf-vol','fill-extrusion-opacity',.44+.2*(0.5+0.5*Math.sin(t*1.4)));pulseRAF=requestAnimationFrame(pulse);}
+function mix(a,b,t){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');}
+function setCity(b){if(!map.getLayer('city'))return;map.setPaintProperty('city','fill-extrusion-color',['interpolate',['linear'],['get','h'],0,mix('#4b4964','#67658a',b),30,mix('#5d5b78','#807ea6',b),90,mix('#7d7ba0','#a3a1c8',b)]);}
+
+function setMode(m){
+  mode=m;selId=null;
+  document.querySelectorAll('#modeseg button').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  document.getElementById('mode-desc').textContent=DESC[m];
+  document.getElementById('sliderwrap').classList.toggle('on',m==='vizia');
+  document.getElementById('counter').classList.toggle('show',m==='vizia');
+  hideCard();stopPulse();
+  map.getLayer('bf-vol')&&map.setPaintProperty('bf-vol','fill-extrusion-color',ownerColor);
+  map.getLayer('bf-line')&&map.setPaintProperty('bf-line','line-color',ownerColor);
+  map.getLayer('bf-vol')&&map.setPaintProperty('bf-vol','fill-extrusion-height',HEIGHT);
+  setCity(0);
+  if(m==='pulz'){pulse();}
+  if(m==='objav'){map.setPaintProperty('bf-vol','fill-extrusion-opacity',.64);map.easeTo({pitch:42,bearing:-13,duration:700});}
+  if(m==='vizia'){document.getElementById('tl').value=0;applyVision(0);}
+}
+
+function select(id){
+  selId=id;const f=bf.features.find(x=>x.properties.OBJECTID===id);if(!f)return;const p=f.properties;
+  map.setPaintProperty('bf-vol','fill-extrusion-opacity',['case',['==',['id'],id],.9,.12]);
+  map.setPaintProperty('bf-line','line-opacity',['case',['==',['id'],id],1,.15]);
+  map.fitBounds(bbox(f.geometry),{padding:{top:120,bottom:120,left:380,right:360},pitch:48,bearing:-13,duration:1000,maxZoom:15});
+  const oc={'MESTO':C.green,'SÚKROMNÍ VLASTNÍCI':C.amber,'MESTO A SÚKROMNÍ VLASTNÍCI':C.blue,'ŠTÁT':C.violet}[p.DRUH_VLA]||C.grey;
+  const sp=document.getElementById('sc-state');
+  sp.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:'+oc+';display:inline-block"></span>'+(OWNER_LBL[p.DRUH_VLA]||'Iné');
+  sp.style.background='rgba(255,255,255,.06)';sp.style.color=oc;
+  document.getElementById('sc-name').textContent=p.NAZOV||'Brownfield';
+  document.getElementById('sc-sub').textContent=(p.MC||'')+(p.ADRESA?' · '+p.ADRESA:'');
+  document.getElementById('sc-area').textContent='~'+(Math.round((p.VYMERA_HA||0)*10)/10)+' ha';
+  document.getElementById('sc-owner').innerHTML=p.DRUH_VLA==='MESTO'?'<span class="pill key">Mesto drží kľúč</span>':(OWNER_LBL[p.DRUH_VLA]||'Iné');
+  document.getElementById('sc-contam').innerHTML=p.KONTAMIN==='2'?'<span class="pill crit">prítomná</span>':'nezistená';
+  document.getElementById('sc-use').textContent=p.S_VYUZITIE||p.N_FUNK_POP||'—';
+  document.getElementById('sc-potential').textContent=p.POTENCIAL||p.ZAMER||p.DOP_B_VYUZ||'—';
+  document.getElementById('sitecard').classList.add('show');
+}
+function hideCard(){document.getElementById('sitecard').classList.remove('show');
+  if(map.getLayer('bf-vol')){map.setPaintProperty('bf-vol','fill-extrusion-opacity',mode==='objav'?.64:.6);map.setPaintProperty('bf-line','line-opacity',.8);}selId=null;}
+
+function applyVision(v){
+  const s=v/100;
+  const col=['case',['<=',['get','_vt'],s],C.revit,ownerColor];
+  map.setPaintProperty('bf-vol','fill-extrusion-color',col);
+  map.setPaintProperty('bf-line','line-color',col);
+  map.setPaintProperty('bf-vol','fill-extrusion-height',['*',HEIGHT,['case',['<=',['get','_vt'],s],1.5,1]]);
+  map.setPaintProperty('bf-vol','fill-extrusion-opacity',.5+.15*s);
+  let n=0,ha=0;bf.features.forEach(f=>{if(f.properties._vt<=s){n++;ha+=f.properties.VYMERA_HA||0;}});
+  document.getElementById('cnt-n').textContent=n+' / '+bf.features.length;
+  document.getElementById('cnt-ha').textContent='oživených · '+Math.round(ha)+' ha';
+}
+
+function vis(id,on){map.getLayer(id)&&map.setLayoutProperty(id,'visibility',on?'visible':'none');}
+document.getElementById('l-base').onchange=e=>{['bf-vol','bf-line'].forEach(l=>vis(l,e.target.checked));};
+document.getElementById('l-contam').onchange=e=>vis('bf-contam',e.target.checked);
+document.getElementById('l-big').onchange=e=>vis('bf-big',e.target.checked);
+document.getElementById('l-mesto').onchange=e=>vis('bf-mesto',e.target.checked);
+document.querySelectorAll('#modeseg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+document.getElementById('tl').oninput=e=>applyVision(+e.target.value);
+document.getElementById('sc-close').onclick=hideCard;
+document.getElementById('intro-go').onclick=()=>document.getElementById('intro').classList.add('hide');
+function proj(on){document.body.classList.toggle('proj',on);map.easeTo({pitch:on?16:42,bearing:on?0:-13,duration:800});}
+document.getElementById('proj-btn').onclick=()=>proj(!document.body.classList.contains('proj'));
+document.addEventListener('keydown',e=>{if((e.key==='Escape'||e.key==='p'||e.key==='P')&&document.body.classList.contains('proj'))proj(false);else if(e.key==='p'||e.key==='P')proj(true);});
+</script>
+</body>
+</html>

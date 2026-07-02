@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brownfieldy · UI mockupy (dotyková obrazovka)</title>
+<style>
+@font-face{font-family:"Overused Grotesk";src:url("./fonts/OverusedGrotesk-VF.woff2") format("woff2");font-weight:300 900;font-display:swap}
+:root{
+  --indigo:#30287B;--blue:#4ec5f9;--warm:#e4564f;--green:#29b826;--amber:#f4b860;--violet:#9b7fe6;--grey:#9a97b3;--revit:#3ee06a;
+  --bg:#0f0d1a;--bg2:#181428;--card:#1d1a2e;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.16);
+  --tx:#efe9fb;--dim:#b7b1d4;--faint:#847ea6;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#c9c7d6;min-height:100vh;font-family:"Overused Grotesk","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 90% at 50% 0%,#e9e8f0,#bfbdd0);display:flex;flex-direction:column;align-items:center;padding:26px 16px 60px}
+.hdr{width:100%;max-width:1180px;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;color:#2a2740}
+.hdr h1{font-size:22px;font-weight:660;letter-spacing:-.5px}
+.hdr p{font-size:12.5px;color:#5b577a;margin-top:3px}
+.hdr .tabs{display:flex;gap:6px}
+.hdr .tabs button{border:1px solid rgba(48,40,123,.2);background:rgba(255,255,255,.6);color:#30287B;font-family:inherit;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s}
+.hdr .tabs button.on{background:#30287B;color:#fff;border-color:transparent}
+
+/* tablet */
+.tablet{width:100%;max-width:1180px;aspect-ratio:16/10.2;background:#0a0912;border-radius:26px;padding:12px;
+  box-shadow:0 40px 90px -30px rgba(30,26,60,.6),0 0 0 2px rgba(255,255,255,.4);position:relative}
+.screen{position:absolute;inset:12px;border-radius:16px;overflow:hidden;background:radial-gradient(120% 100% at 60% 0%,#211d3c,var(--bg));display:none;color:var(--tx)}
+.screen.on{display:flex;flex-direction:column}
+
+/* app chrome */
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);flex:none}
+.appbar .b{display:flex;align-items:center;gap:10px}
+.appbar .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.appbar .b b{font-size:14px;font-weight:680;letter-spacing:.2px}
+.appnav{display:flex;gap:4px;background:rgba(0,0,0,.28);padding:4px;border-radius:10px}
+.appnav span{font-size:12px;color:var(--dim);padding:7px 14px;border-radius:7px;font-weight:560}
+.appnav span.on{background:var(--indigo);color:#fff;font-weight:640}
+.appbody{flex:1;display:flex;min-height:0}
+
+/* generic */
+.seg{display:inline-flex;gap:4px;background:rgba(0,0,0,.28);padding:4px;border-radius:11px}
+.seg span{font-size:13px;color:var(--dim);padding:9px 20px;border-radius:8px;font-weight:560}
+.seg span.on{background:var(--indigo);color:#fff;font-weight:660}
+.chip{font-size:10.5px;font-weight:640;padding:4px 10px;border-radius:999px}
+.crit{background:rgba(228,86,79,.18);color:#ff9a94}.key{background:rgba(41,184,38,.18);color:#7de07a}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--faint);font-weight:700}
+.mapwrap{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0c0a16;position:relative}
+.note{font-size:11px;color:var(--faint);display:flex;gap:8px;align-items:center}
+.note .i{width:16px;height:16px;border-radius:50%;background:rgba(244,184,96,.2);color:var(--amber);font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
+
+/* SCREEN 1 DOMOV */
+.s-domov{padding:0}
+.dom-grid{flex:1;display:grid;grid-template-columns:1.1fr 1fr;gap:22px;padding:26px 30px}
+.dom-l h2{font-size:32px;font-weight:660;letter-spacing:-1px;line-height:1.05;margin:10px 0 14px}
+.dom-l h2 em{font-style:normal;color:var(--amber)}
+.dom-l p{font-size:13.5px;color:var(--dim);line-height:1.55;max-width:42ch}
+.modecards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}
+.modecards .mc{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:14px}
+.modecards .mc b{font-size:14px}.modecards .mc span{font-size:11px;color:var(--dim);display:block;margin-top:4px;line-height:1.4}
+.modecards .mc.on{border-color:var(--amber);background:rgba(244,184,96,.08)}
+.stats{display:flex;gap:26px;margin-top:8px}
+.stats .st b{font-size:34px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;display:block}
+.stats .st span{font-size:11px;color:var(--dim)}
+
+/* SCREEN 2 VYBER */
+.s-vyber .appbody{gap:0}
+.filters{width:210px;border-right:1px solid var(--line);padding:18px 16px;flex:none;overflow-y:auto}
+.filters .fg{margin-bottom:18px}
+.filters .fg .eyebrow{margin-bottom:9px;display:block}
+.filters .row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);padding:5px 0}
+.filters .row i{width:11px;height:11px;border-radius:3px;flex:none}
+.filters .row b{margin-left:auto;color:var(--tx);font-variant-numeric:tabular-nums}
+.listcol{width:320px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex:none}
+.listhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim)}
+.listhead b{color:var(--tx)}
+.list{overflow-y:auto;flex:1}
+.li{display:flex;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.li:hover{background:rgba(255,255,255,.03)}
+.li.on{background:rgba(48,40,123,.25)}
+.li .d{width:10px;height:10px;border-radius:3px;margin-top:4px;flex:none}
+.li .t{flex:1}
+.li .t b{font-size:13.5px;font-weight:600}
+.li .t span{font-size:11px;color:var(--faint);display:block;margin-top:2px}
+.li .ha{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mapcol{flex:1;padding:16px}
+
+/* SCREEN 3 DETAIL */
+.s-detail .appbody{gap:0}
+.det-map{flex:1;padding:16px}
+.det-panel{width:340px;border-left:1px solid var(--line);padding:22px 22px;overflow-y:auto;flex:none}
+.det-panel h2{font-size:24px;font-weight:660;letter-spacing:-.4px;line-height:1.1}
+.det-panel .sub{font-size:12.5px;color:var(--dim);margin:4px 0 16px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.kv .k{color:var(--dim)}.kv .v{font-weight:620;text-align:right}
+.photo{height:120px;border-radius:10px;margin:14px 0;background:linear-gradient(135deg,#2b2745,#3a3560);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px}
+.sb{margin-top:12px}.sb .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--faint);font-weight:700}
+.sb p{font-size:12px;color:var(--dim);line-height:1.5;margin-top:5px}
+.gradbar{height:8px;border-radius:5px;margin-top:14px;background:linear-gradient(90deg,var(--grey),var(--amber),var(--green))}
+
+/* SCREEN 4 VIZIA */
+.s-vizia .appbody{flex-direction:column;padding:20px 24px;gap:16px}
+.viz-top{flex:1;display:grid;grid-template-columns:1.5fr 1fr;gap:18px;min-height:0}
+.viz-stat{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.viz-stat .big b{font-size:40px;font-weight:700;letter-spacing:-1.5px;color:var(--revit);font-variant-numeric:tabular-nums}
+.viz-stat .big span{font-size:12px;color:var(--dim);display:block}
+.viz-delta{font-size:13px;color:var(--green);font-weight:600}
+.timeline{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:16px 20px;flex:none}
+.tl-row{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;margin-bottom:8px}
+.tl-row .cur{color:var(--amber);font-weight:700}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--amber) 60%,rgba(255,255,255,.14) 60%);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--amber);border:2px solid #fff;box-shadow:0 0 14px rgba(244,184,96,.6);cursor:pointer}
+.toggles{display:flex;gap:20px;margin-top:12px;flex-wrap:wrap}
+.tgm{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)}
+.tgm .sw{width:30px;height:17px;border-radius:999px;background:var(--indigo);position:relative}
+.tgm .sw::after{content:"";position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;background:#fff}
+.footnote{padding:8px 20px;border-top:1px solid var(--line);font-size:10px;color:var(--faint);flex:none;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><h1>Brownfieldy Bratislavy — dotyková obrazovka</h1><p>Reálne UI mockupy · MIB tokeny · dáta z UŠ Brownfieldy 2022 (113 území)</p></div>
+  <div class="tabs" id="tabs">
+    <button data-s="domov" class="on">Domov</button>
+    <button data-s="vyber">Výber 113</button>
+    <button data-s="detail">Detail</button>
+    <button data-s="vizia">Vízia</button>
+  </div>
+</div>
+
+<div class="tablet">
+  <!-- ===== DOMOV ===== -->
+  <section class="screen s-domov on" data-s="domov">
+    <div class="appbar"><div class="b"><span class="dot"></span><b>Brownfieldy Bratislavy</b></div><div class="appnav"><span class="on">Domov</span><span>Územia</span><span>Vízia</span><span>O projekte</span></div></div>
+    <div class="dom-grid">
+      <div class="dom-l">
+        <div class="eyebrow">TU-BA · interaktívny model</div>
+        <h2>Od nevyužitých území<br>k <em>živým štvrtiam</em></h2>
+        <p>113 brownfieldov, 580 hektárov mŕtvej zeme. Vyber režim a preskúmaj, kto drží kľúč a čím sa môžu stať.</p>
+        <div class="modecards">
+          <div class="mc on"><b>Pulz</b><span>mesto dýcha</span></div>
+          <div class="mc"><b>Objav</b><span>ťukni na územie</span></div>
+          <div class="mc"><b>Vízia</b><span>posuň čas</span></div>
+        </div>
+        <div class="stats">
+          <div class="st"><b>113</b><span>brownfieldov</span></div>
+          <div class="st"><b>580 ha</b><span>nevyužitého tkaniva</span></div>
+          <div class="st"><b>~50 %</b><span>v širšom centre</span></div>
+        </div>
+      </div>
+      <div class="mapwrap" id="map-domov"></div>
+    </div>
+    <div class="footnote"><span class="note"><span class="i">i</span> Ovládaš od okraja — ťuk na obrazovke rozsvieti územie na makete.</span><span>01 / Domov</span></div>
+  </section>
+
+  <!-- ===== VYBER ===== -->
+  <section class="screen s-vyber" data-s="vyber">
+    <div class="appbar"><div class="b"><span class="dot"></span><b>Výber územia</b></div><div class="appnav"><span>Domov</span><span class="on">Územia</span><span>Vízia</span><span>O projekte</span></div></div>
+    <div class="appbody">
+      <div class="filters">
+        <div class="fg"><span class="eyebrow">Vlastníctvo</span>
+          <div class="row"><i style="background:var(--amber)"></i>Súkromní<b>56</b></div>
+          <div class="row"><i style="background:var(--grey)"></i>Iné<b>25</b></div>
+          <div class="row"><i style="background:var(--green)"></i>Mesto<b>13</b></div>
+          <div class="row"><i style="background:var(--violet)"></i>Štát<b>11</b></div>
+          <div class="row"><i style="background:var(--blue)"></i>Mesto+súkr.<b>8</b></div>
+        </div>
+        <div class="fg"><span class="eyebrow">Filtre</span>
+          <div class="row"><span class="chip crit">Kontaminované</span><b>15</b></div>
+          <div class="row" style="color:var(--dim)">Nad 25 ha<b>9</b></div>
+          <div class="row" style="color:var(--dim)">V centre<b>~57</b></div>
+        </div>
+        <div class="fg"><span class="eyebrow">Mestská časť</span>
+          <div class="row" style="color:var(--dim)">Staré Mesto · Ružinov</div>
+          <div class="row" style="color:var(--dim)">Nové Mesto · Petržalka…</div>
+        </div>
+      </div>
+      <div class="listcol">
+        <div class="listhead"><span><b>113</b> území</span><span>zoradiť: rozloha ↓</span></div>
+        <div class="list" id="list"></div>
+      </div>
+      <div class="mapcol"><div class="mapwrap" id="map-vyber" style="height:100%"></div></div>
+    </div>
+    <div class="footnote"><span class="note"><span class="i">i</span> Ťuk na položku → územie sa rozsvieti na makete aj v zozname.</span><span>02 / Výber 113 území</span></div>
+  </section>
+
+  <!-- ===== DETAIL ===== -->
+  <section class="screen s-detail" data-s="detail">
+    <div class="appbar"><div class="b"><span class="dot"></span><b>Istrochem</b></div><div class="appnav"><span>Domov</span><span class="on">Územia</span><span>Vízia</span><span>O projekte</span></div></div>
+    <div class="appbody">
+      <div class="det-map"><div class="mapwrap" id="map-detail" style="height:100%"></div></div>
+      <div class="det-panel">
+        <span class="chip" style="background:rgba(244,184,96,.16);color:var(--amber)">Súkromní vlastníci</span>
+        <h2 style="margin-top:10px">Istrochem</h2>
+        <div class="sub">Nové Mesto · priemyselný areál</div>
+        <div class="kv"><span class="k">Rozloha</span><span class="v">~90 ha</span></div>
+        <div class="kv"><span class="k">Kto drží kľúč</span><span class="v">Súkromník (Agrofert)</span></div>
+        <div class="kv"><span class="k">Env. záťaž</span><span class="v"><span class="chip crit">~75 % zamorenia mesta</span></span></div>
+        <div class="kv"><span class="k">Horizont</span><span class="v">Dlhý</span></div>
+        <div class="photo">📷 historická + súčasná fotografia</div>
+        <div class="sb"><div class="lbl">Súčasný stav</div><p>Bývalá chemička (Dynamit Nobel / Dimitrovka) od r. 1873. Roky nevyužité, spor o to, kto zaplatí sanáciu.</p></div>
+        <div class="sb"><div class="lbl">Potenciál</div><p>Zmiešaná mestská štvrť — no s najťažšou sanáciou v meste.</p></div>
+        <div class="gradbar"></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:6px"><span>mŕtve</span><span>v premene</span><span>živé</span></div>
+      </div>
+    </div>
+    <div class="footnote"><span class="note"><span class="i">i</span> Detail = hĺbka na obrazovke; na makete beží len svetlo a poloha.</span><span>03 / Detail lokality</span></div>
+  </section>
+
+  <!-- ===== VIZIA ===== -->
+  <section class="screen s-vizia" data-s="vizia">
+    <div class="appbar"><div class="b"><span class="dot"></span><b>Vízia — časová os</b></div><div class="appnav"><span>Domov</span><span>Územia</span><span class="on">Vízia</span><span>O projekte</span></div></div>
+    <div class="appbody">
+      <div class="viz-top">
+        <div class="mapwrap" id="map-vizia"></div>
+        <div class="viz-stat">
+          <div class="big"><b id="viz-n">41</b><span>oživených území z 113</span></div>
+          <div class="big"><b id="viz-ha">312 ha</b><span>vrátených mestu</span></div>
+          <div class="viz-delta" id="viz-delta">+ 18 400 obyvateľov v dosahu</div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="tl-row"><span>2025</span><span>2035</span><span class="cur" id="viz-year">2040</span><span>2050</span></div>
+        <input type="range" id="viz-tl" min="0" max="100" value="60">
+        <div class="toggles">
+          <span class="tgm"><span class="sw"></span>Brownfieldy</span>
+          <span class="tgm"><span class="sw"></span>Spojnice</span>
+          <span class="tgm"><span class="sw" style="background:rgba(255,255,255,.14)"></span>Kontaminácia</span>
+          <span class="tgm"><span class="sw" style="background:rgba(255,255,255,.14)"></span>Zeleň</span>
+        </div>
+      </div>
+    </div>
+    <div class="footnote"><span class="note"><span class="i">i</span> Ilustračný scenár — mestské územia sa aktivujú prv, veľké/súkromné neskôr.</span><span>04 / Vízia</span></div>
+  </section>
+</div>
+
+<script>
+const OC={m:'#29b826',s:'#f4b860',mix:'#4ec5f9',st:'#9b7fe6',i:'#9a97b3'};
+// zóny: [x,y,w,h,owner,contam]
+const ZONES=[[70,60,34,26,'s',0],[130,44,26,20,'i',0],[210,70,30,24,'m',0],[300,54,28,22,'st',0],[360,90,30,24,'s',1],
+[110,120,26,20,'s',0],[180,150,34,26,'m',0],[250,120,30,24,'mix',0],[320,150,26,22,'i',0],[60,170,24,20,'s',1],
+[400,150,26,22,'i',0],[150,200,30,24,'s',0],[280,200,28,22,'st',0],[350,210,30,24,'m',0]];
+function mapSVG(opts){opts=opts||{};const hi=opts.hi, viz=opts.viz;
+  let z=ZONES.map((zz,idx)=>{const[x,y,w,h,o,c]=zz;let col=OC[o];if(viz&&idx%2===0)col='#3ee06a';
+    const sel=hi===idx;const stroke=sel?'stroke="#fff" stroke-width="2.5"':'';
+    let s='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="'+col+'" opacity="'+(hi!=null&&!sel?.25:.85)+'" '+stroke+'/>';
+    if(c)s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="url(#dots)"/>';
+    return s;}).join('');
+  let links=viz?'<g stroke="#4ec5f9" stroke-width="1.4" opacity=".6"><line x1="87" y1="73" x2="223" y2="132"/><line x1="223" y1="132" x2="315" y2="60"/><line x1="195" y1="163" x2="265" y2="132"/></g>':'';
+  return '<svg viewBox="0 0 460 260" style="width:100%;height:100%;display:block">'+
+   '<defs><pattern id="dots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="#e4564f"/></pattern></defs>'+
+   '<rect width="460" height="260" fill="#0c0a16"/>'+
+   '<path d="M0 150 Q120 175 240 150 T460 165 L460 195 Q300 185 200 205 T0 190 Z" fill="#1a2740" opacity=".8"/>'+
+   '<g stroke="rgba(255,255,255,.06)" stroke-width="1"><line x1="120" y1="0" x2="120" y2="260"/><line x1="250" y1="0" x2="250" y2="260"/><line x1="360" y1="0" x2="360" y2="260"/><line x1="0" y1="100" x2="460" y2="100"/><line x1="0" y1="200" x2="460" y2="200"/></g>'+
+   links+z+'</svg>';}
+
+document.getElementById('map-domov').innerHTML=mapSVG();
+document.getElementById('map-vyber').innerHTML=mapSVG({hi:7});
+document.getElementById('map-detail').innerHTML=mapSVG({hi:2});
+document.getElementById('map-vizia').innerHTML=mapSVG({viz:true});
+
+// zoznam reálnych území
+const SITES=[
+ ['Istrochem','Nové Mesto','~90 ha','s'],['Zimný prístav','Ružinov','~40 ha','mix'],
+ ['Areál Matador','Petržalka','6,0 ha','s'],['Filiálka','Nové Mesto','10 ha','st'],
+ ['Hotel Kyjev','Staré Mesto','0,6 ha','s'],['Gumon','Ružinov','7,0 ha','s'],
+ ['Technický objekt · Pionierska','Nové Mesto','0,5 ha','mix'],['Školská ulica','Staré Mesto','0,7 ha','s'],
+ ['Bajkalská 31','Ružinov','5,0 ha','s'],['Štadión Mierová kolónia','Nové Mesto','3,0 ha','m']];
+document.getElementById('list').innerHTML=SITES.map((s,i)=>'<div class="li'+(i===0?' on':'')+'"><span class="d" style="background:'+OC[s[3]]+'"></span><div class="t"><b>'+s[0]+'</b><span>'+s[1]+'</span></div><span class="ha">'+s[2]+'</span></div>').join('');
+
+// tabs
+function show(s){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.dataset.s===s));
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+const q=new URLSearchParams(location.search);if(q.get('s'))show(q.get('s'));
+
+// vizia slider
+const tl=document.getElementById('viz-tl');
+tl&&tl.addEventListener('input',()=>{const s=+tl.value/100;const n=Math.round(s*113);const ha=Math.round(s*580);
+  document.getElementById('viz-n').textContent=n;document.getElementById('viz-ha').textContent=ha+' ha';
+  document.getElementById('viz-year').textContent=Math.round(2025+s*25);
+  document.getElementById('viz-delta').textContent='+ '+(n*450).toLocaleString('sk')+' obyvateľov v dosahu';
+  tl.style.background='linear-gradient(90deg,var(--amber) '+tl.value+'%,rgba(255,255,255,.14) '+tl.value+'%)';});
+</script>
+</body>
+</html>

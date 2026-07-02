@@ -1,0 +1,77 @@
+{
+  "type": "FeatureCollection",
+  "note": "Ilustračné umiestnenie kľúčových brownfieldov BA pre koncept prototyp. Atribúty vychádzajú z MIB Koncepcie rozvoja brownfieldov 2026 a UŠ Brownfields 2022. Geometria je približná — v ostrej verzii by sa nahradila presnými polygónmi z ArcGIS.",
+  "features": [
+    { "type": "Feature", "properties": {
+        "id": "istrochem", "name": "Istrochem", "district": "Nové Mesto", "area_ha": 90,
+        "owner": "Súkromný", "state": "dead", "significant": true, "contamination": "heavy",
+        "history": "Bývalá Dynamit Nobel / Dimitrovka — chemická výroba od r. 1873.",
+        "potential": "Zmiešaná mestská štvrť, no s najťažšou sanáciou v celom meste.",
+        "horizon": "Dlhý" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.140,48.180],[17.156,48.181],[17.158,48.174],[17.146,48.172],[17.138,48.175],[17.140,48.180]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "filialka", "name": "Filiálka", "district": "Nové Mesto", "area_ha": 10,
+        "owner": "Štát", "state": "dead", "significant": true, "contamination": "some",
+        "history": "Nedostavaná železničná stanica — desaťročia ležiaci uzol.",
+        "potential": "Mestský dopravný uzol (TIOP) prepojený s nábrežím.",
+        "horizon": "Stredný" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.132,48.167],[17.142,48.167],[17.143,48.162],[17.133,48.162],[17.132,48.167]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "zimny-pristav", "name": "Zimný prístav", "district": "Ružinov", "area_ha": 40,
+        "owner": "Zmiešané", "state": "active", "significant": true, "contamination": "some",
+        "history": "Zimný prístav na Dunaji — priemyselné prekladisko.",
+        "potential": "Nová štvrť pri rieke; beží medzinárodná súťaž na víziu.",
+        "horizon": "Dlhý" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.128,48.142],[17.150,48.140],[17.152,48.132],[17.130,48.133],[17.128,48.142]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "nivy", "name": "Mlynské Nivy", "district": "Ružinov", "area_ha": 25,
+        "owner": "Súkromný", "state": "alive", "significant": false, "contamination": "none",
+        "history": "Autobusová stanica a teplárenský areál.",
+        "potential": "Hotová premena — Nivy, Sky Park. Dôkaz, že to ide.",
+        "horizon": "Hotové" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.126,48.156],[17.137,48.156],[17.138,48.150],[17.127,48.150],[17.126,48.156]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "gumon", "name": "Gumon", "district": "Ružinov", "area_ha": 7,
+        "owner": "Súkromný", "state": "active", "significant": false, "contamination": "some",
+        "history": "Závod na technickú gumu.",
+        "potential": "Bývanie a služby v dobre napojenej polohe.",
+        "horizon": "Stredný" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.137,48.158],[17.145,48.158],[17.146,48.154],[17.138,48.154],[17.137,48.158]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "cvernovka", "name": "Cvernovka", "district": "Ružinov", "area_ha": 3,
+        "owner": "Súkromný", "state": "alive", "significant": false, "contamination": "none",
+        "history": "Továreň na nite (cverny).",
+        "potential": "Kreatívny klaster — kultúra, ateliéry, komunita.",
+        "horizon": "Hotové" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.130,48.151],[17.136,48.151],[17.137,48.147],[17.131,48.147],[17.130,48.151]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "bajkalska31", "name": "Bajkalská 31", "district": "Ružinov", "area_ha": 5,
+        "owner": "Súkromný", "state": "active", "significant": false, "contamination": "none",
+        "history": "Administratívno-skladový areál.",
+        "potential": "Nová obytná štvrť — prvá etapa predstavená.",
+        "horizon": "Stredný" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.143,48.161],[17.151,48.161],[17.152,48.157],[17.144,48.157],[17.143,48.161]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "stadion-mierova", "name": "Štadión Mierová kolónia", "district": "Nové Mesto", "area_ha": 3,
+        "owner": "Mesto", "state": "dead", "significant": false, "contamination": "none",
+        "history": "Opustený športový areál.",
+        "potential": "Šport + bývanie — a kľúč tu drží mesto samo.",
+        "horizon": "Krátky" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.152,48.173],[17.160,48.173],[17.161,48.169],[17.153,48.169],[17.152,48.173]]] } },
+
+    { "type": "Feature", "properties": {
+        "id": "matadorka", "name": "Matadorka", "district": "Petržalka", "area_ha": 6,
+        "owner": "Súkromný", "state": "dead", "significant": false, "contamination": "some",
+        "history": "Gumárenský závod Matador.",
+        "potential": "Bývanie na dobre napojenom mieste.",
+        "horizon": "Stredný" },
+      "geometry": { "type": "Polygon", "coordinates": [[[17.100,48.123],[17.110,48.123],[17.111,48.119],[17.101,48.119],[17.100,48.123]]] } }
+  ]
+}
