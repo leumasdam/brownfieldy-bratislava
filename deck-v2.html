@@ -18,7 +18,10 @@ body::before{content:"";position:fixed;inset:0;background:
   radial-gradient(80% 90% at 15% 100%,rgba(238,237,244,.9),transparent 68%);
   pointer-events:none}
 #stage{position:fixed;inset:0}
-.slide{position:absolute;inset:0;padding:52px 70px 46px;background:linear-gradient(145deg,#fff 0%,#f8f8fc 58%,#f0eff7 100%);opacity:0;pointer-events:none;transition:opacity .45s ease;overflow:hidden}
+.slide{position:absolute;inset:0;padding:52px 70px 104px;background:linear-gradient(145deg,#fff 0%,#f8f8fc 58%,#f0eff7 100%);opacity:0;pointer-events:none;transition:opacity .45s ease;overflow:hidden;z-index:0}
+.slide.leaving{opacity:1;transition:none;z-index:1}
+.slide.leaving .r{opacity:1;transform:none;transition:none}
+.slide.active{z-index:2}
 .slide.active{opacity:1;pointer-events:auto}
 .slide::after{content:"";position:absolute;right:58px;bottom:46px;width:54px;height:38px;background-image:radial-gradient(var(--indigo) 1.6px,transparent 1.8px);background-size:11px 11px;opacity:.55}
 .r{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s cubic-bezier(.33,1,.68,1)}
@@ -69,13 +72,18 @@ h2{font-size:clamp(44px,5vw,82px);line-height:.96;letter-spacing:-.05em;font-wei
 .dark-card{background:linear-gradient(160deg,#19152e,#0f0d1c);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:28px;box-shadow:var(--shadow)}
 .dark-card p{color:#bdb7da;font-size:18px;line-height:1.5;margin-top:12px}
 .white-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px}.white-card p{color:var(--muted);font-size:18px;line-height:1.5;margin-top:12px}
-.footer{position:absolute;left:70px;right:70px;bottom:34px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:18px;color:var(--ink);font-size:18px;z-index:5}
-.footer span:last-child{color:var(--muted)}
+.footer{display:none}
+.gfoot{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 70px;border-top:1px solid var(--line);background:rgba(255,255,255,.86);backdrop-filter:blur(10px)}
+.gfoot .l{display:flex;align-items:baseline;gap:14px;font-variant-numeric:tabular-nums}
+.gfoot .l b{font-size:22px;font-weight:760;color:var(--indigo);letter-spacing:.5px}
+.gfoot .l .tot{font-size:13px;color:var(--muted)}
+.gfoot .l .lbl{font-size:14px;color:var(--muted);border-left:1px solid var(--line);padding-left:14px}
 .progress{position:fixed;top:0;left:0;height:4px;background:var(--indigo);z-index:20;transition:width .3s}
-.nav{position:fixed;right:30px;bottom:26px;z-index:30;display:flex;gap:10px}
-.nav button{width:48px;height:48px;border:1px solid var(--line2);background:#fff;color:var(--indigo);border-radius:16px;cursor:pointer;font-size:24px}
+.nav{display:flex;gap:10px}
+.nav button{width:46px;height:46px;border:1px solid var(--line2);background:#fff;color:var(--indigo);border-radius:14px;cursor:pointer;font-size:24px}
 .nav button:hover{background:var(--indigo);color:#fff}
-.dots{position:fixed;left:50%;bottom:42px;transform:translateX(-50%);display:flex;gap:7px;z-index:31}
+.dots{position:fixed;left:50%;bottom:29px;transform:translateX(-50%);display:flex;gap:7px;z-index:31}
 .dots button{width:7px;height:7px;border:0;border-radius:99px;background:rgba(48,40,123,.22);padding:0;cursor:pointer}.dots button.on{width:25px;background:var(--indigo)}
 @media(max-width:900px){.slide{padding:30px}.two,.two.rev,.three,.four,.flow,.split-rule,.feature-row{grid-template-columns:1fr}.palette{grid-template-columns:repeat(2,1fr)}.footer{left:30px;right:30px}.device::before{border-width:8px}}
 </style>
@@ -249,13 +257,21 @@ h2{font-size:clamp(44px,5vw,82px);line-height:.96;letter-spacing:-.05em;font-wei
 
 </div>
 <div class="dots" id="dots"></div>
-<div class="nav"><button id="prev" aria-label="Predchádzajúci">‹</button><button id="next" aria-label="Ďalší">›</button></div>
+<footer class="gfoot">
+  <div class="l"><b id="gf-num">01</b><span class="tot">/ 12</span><span class="lbl" id="gf-lbl"></span></div>
+  <div class="nav"><button id="prev" aria-label="Predchádzajúci">‹</button><button id="next" aria-label="Ďalší">›</button></div>
+</footer>
 <script>
-const slides=[...document.querySelectorAll('.slide')],dots=document.getElementById('dots');let i=0;
+const slides=[...document.querySelectorAll('.slide')],dots=document.getElementById('dots');let i=0,leaveT=null;
 slides.forEach((_,k)=>{const b=document.createElement('button');b.onclick=()=>go(k);dots.appendChild(b);});
-function go(n){i=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+function go(n){const from=slides[i];i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach(s=>s.classList.remove('leaving'));clearTimeout(leaveT);
+  if(from&&from!==slides[i]&&from.classList.contains('active')){from.classList.add('leaving');leaveT=setTimeout(()=>from.classList.remove('leaving'),480);}
+  slides.forEach((s,k)=>s.classList.toggle('active',k===i));
   [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
   document.getElementById('prog').style.width=((i+1)/slides.length*100)+"%";
+  document.getElementById('gf-num').textContent=String(i+1).padStart(2,'0');
+  const flbl=slides[i].querySelector('.footer span:last-child');document.getElementById('gf-lbl').textContent=flbl?flbl.textContent:'';
   // reštart odhalení — animácia beží vždy, oboma smermi (aj 5→4)
   const els=slides[i].querySelectorAll('.r');
   els.forEach(el=>{el.style.transition='none';el.style.transitionDelay='0ms';el.style.opacity='0';el.style.transform='translateY(12px)';});

@@ -10,8 +10,10 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;background:#000;font-family:"Overused Grotesk","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
 #stage{position:fixed;inset:0}
-.slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .65s ease;background:var(--bg);color:var(--ink);overflow:hidden}
-.slide.active{opacity:1;pointer-events:auto}
+.slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .65s ease;background:var(--bg);color:var(--ink);overflow:hidden;z-index:0}
+.slide.leaving{opacity:1;transition:none;z-index:1}
+.slide.leaving .r{opacity:1;transform:none;transition:none}
+.slide.active{opacity:1;pointer-events:auto;z-index:2}
 .r{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s cubic-bezier(.33,1,.68,1)}
 .slide.active .r{opacity:1;transform:none}
 
@@ -417,9 +419,11 @@ h2{font-size:clamp(34px,5.6vw,80px);line-height:.96;letter-spacing:-2.2px;font-w
   <button id="next"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
 </div>
 <script>
-const slides=[...document.querySelectorAll('.slide')],dots=document.getElementById('dots'),idxEl=document.getElementById('idx');let i=0;
+const slides=[...document.querySelectorAll('.slide')],dots=document.getElementById('dots'),idxEl=document.getElementById('idx');let i=0,leaveT=null;
 slides.forEach((_,k)=>{const b=document.createElement('button');b.onclick=()=>go(k);dots.appendChild(b);});
-function go(n){i=Math.max(0,Math.min(slides.length-1,n));
+function go(n){const from=slides[i];i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach(s=>s.classList.remove('leaving'));clearTimeout(leaveT);
+  if(from&&from!==slides[i]&&from.classList.contains('active')){from.classList.add('leaving');leaveT=setTimeout(()=>from.classList.remove('leaving'),700);}
   slides.forEach((s,k)=>s.classList.toggle('active',k===i));
   [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
   const num=String(i+1).padStart(2,'0');idxEl.textContent=num;document.getElementById('cn').textContent=num;
