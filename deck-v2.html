@@ -256,7 +256,11 @@ slides.forEach((_,k)=>{const b=document.createElement('button');b.onclick=()=>go
 function go(n){i=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,k)=>s.classList.toggle('active',k===i));
   [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
   document.getElementById('prog').style.width=((i+1)/slides.length*100)+"%";
-  slides[i].querySelectorAll('.r').forEach((el,k)=>el.style.transitionDelay=(k*70)+"ms");
+  // reštart odhalení — animácia beží vždy, oboma smermi (aj 5→4)
+  const els=slides[i].querySelectorAll('.r');
+  els.forEach(el=>{el.style.transition='none';el.style.transitionDelay='0ms';el.style.opacity='0';el.style.transform='translateY(12px)';});
+  void slides[i].offsetWidth; // reflow — zafixuje skrytý stav
+  els.forEach((el,k)=>{el.style.transition='';el.style.transitionDelay=(k*70)+"ms";el.style.opacity='';el.style.transform='';});
   history.replaceState(null,"","?s="+(i+1));
 }
 document.getElementById('next').onclick=()=>go(i+1);document.getElementById('prev').onclick=()=>go(i-1);

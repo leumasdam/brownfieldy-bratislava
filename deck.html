@@ -425,7 +425,10 @@ function go(n){i=Math.max(0,Math.min(slides.length-1,n));
   const num=String(i+1).padStart(2,'0');idxEl.textContent=num;document.getElementById('cn').textContent=num;
   idxEl.style.display=slides[i].querySelector('.show,.arch,.embed')?'none':'block';
   document.getElementById('prog').style.width=((i+1)/slides.length*100)+'%';
-  slides[i].querySelectorAll('.r').forEach((el,k)=>el.style.transitionDelay=(k*95)+'ms');
+  const _els=slides[i].querySelectorAll('.r');
+  _els.forEach(el=>{el.style.transition='none';el.style.transitionDelay='0ms';el.style.opacity='0';el.style.transform='translateY(20px)';});
+  void slides[i].offsetWidth;
+  _els.forEach((el,k)=>{el.style.transition='';el.style.transitionDelay=(k*95)+'ms';el.style.opacity='';el.style.transform='';});
   slides[i].querySelectorAll('iframe[data-src]').forEach(f=>{if(!f.src)f.src=f.dataset.src;});}
 document.getElementById('next').onclick=()=>go(i+1);document.getElementById('prev').onclick=()=>go(i-1);
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(i+1);}if(e.key==='ArrowLeft')go(i-1);if(e.key==='Home')go(0);if(e.key==='End')go(slides.length-1);});
